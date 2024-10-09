@@ -2303,7 +2303,7 @@ def f(x: str | int) -> None:
 
     if x in ["x"]:
         # TODO: we should fix this reveal https://github.com/python/mypy/issues/3229
-        reveal_type(x)  # N: Revealed type is "Union[builtins.str, builtins.int]"
+        reveal_type(x)  # N: Revealed type is "builtins.str"
         y = x
         z = x
     z = y
