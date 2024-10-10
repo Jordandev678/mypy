@@ -6054,6 +6054,11 @@ class TypeChecker(NodeVisitor[None], CheckerPluginInterface):
                     # explicit type(x) == some_type check
                     if if_map == {} and else_map == {}:
                         if_map, else_map = self.find_type_equals_check(node, expr_indices)
+                    
+                    if if_map == {} and else_map == {} and len(expr_indices) == 2:
+                        if_map, else_map = self.refine_union_comparison_expression(
+                            operands, operand_types
+                        )
                 elif operator in {"in", "not in"}:
                     assert len(expr_indices) == 2
                     left_index, right_index = expr_indices
@@ -6196,6 +6201,29 @@ class TypeChecker(NodeVisitor[None], CheckerPluginInterface):
         else_type = false_only(vartype)
         if_map = {node: if_type} if not isinstance(if_type, UninhabitedType) else None
         else_map = {node: else_type} if not isinstance(else_type, UninhabitedType) else None
+        return if_map, else_map
+
+    def refine_union_comparison_expression(
+        self, operands: list[Expression], operand_types: list[Type]
+    ) -> tuple[TypeMap, TypeMap]:
+        """Refine types based on a comparison between two expressions that are part of a union.
+        
+        For example if we have
+            def f(x: str | int) -> None:
+                if x == "x":
+                    reveal_type(x)
+        Until now x would be Union[str, int], but this allows it to refine to str
+        """
+        if_map = {}
+        else_map = {}
+        assert len(operands) == 2
+        
+        if is_subtype(operand_types[0], operand_types[1]):
+            if_map[operands[1]] = operand_types[0]
+            #else_map[operands[0]] = operand_types[0]
+        elif is_subtype(operand_types[1], operand_types[0]):
+            if_map[operands[0]] = operand_types[1]
+            #else_map[operands[1]] = operand_types[1]
         return if_map, else_map
 
     def propagate_up_typemap_info(self, new_types: TypeMap) -> TypeMap:
