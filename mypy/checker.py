@@ -6057,7 +6057,7 @@ class TypeChecker(NodeVisitor[None], CheckerPluginInterface):
                     
                     if if_map == {} and else_map == {} and len(expr_indices) == 2:
                         if_map, else_map = self.refine_union_comparison_expression(
-                            operands, operand_types
+                            operands, operand_types, expr_indices
                         )
                 elif operator in {"in", "not in"}:
                     assert len(expr_indices) == 2
@@ -6204,7 +6204,7 @@ class TypeChecker(NodeVisitor[None], CheckerPluginInterface):
         return if_map, else_map
 
     def refine_union_comparison_expression(
-        self, operands: list[Expression], operand_types: list[Type]
+        self, operands: list[Expression], operand_types: list[Type], expr_indices: list[int]
     ) -> tuple[TypeMap, TypeMap]:
         """Refine types based on a comparison between two expressions that are part of a union.
         
@@ -6216,13 +6216,13 @@ class TypeChecker(NodeVisitor[None], CheckerPluginInterface):
         """
         if_map = {}
         else_map = {}
-        assert len(operands) == 2
+        assert len(expr_indices) == 2
         
-        if is_subtype(operand_types[0], operand_types[1]):
-            if_map[operands[1]] = operand_types[0]
+        if is_subtype(operand_types[expr_indices[0]], operand_types[expr_indices[1]]):
+            if_map[operands[expr_indices[1]]] = operand_types[expr_indices[0]]
             #else_map[operands[0]] = operand_types[0]
-        elif is_subtype(operand_types[1], operand_types[0]):
-            if_map[operands[0]] = operand_types[1]
+        elif is_subtype(operand_types[expr_indices[1]], operand_types[expr_indices[0]]):
+            if_map[operands[expr_indices[0]]] = operand_types[expr_indices[1]]
             #else_map[operands[1]] = operand_types[1]
         return if_map, else_map
 
