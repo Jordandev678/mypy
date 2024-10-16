@@ -6229,12 +6229,20 @@ class TypeChecker(NodeVisitor[None], CheckerPluginInterface):
         if_map = {}
         else_map = {}
         assert len(expr_indices) == 2
-        
-        if is_subtype(operand_types[expr_indices[0]], operand_types[expr_indices[1]]):
-            if_map[operands[expr_indices[1]]] = operand_types[expr_indices[0]]
+        def get_effective_type(expr: Type) -> Type:
+            if isinstance(expr, Instance):
+                if expr.last_known_value is not None:
+                    return expr.last_known_value
+            return expr
+        first = operands[expr_indices[0]]
+        firsttype = get_effective_type(operand_types[expr_indices[0]])
+        second = operands[expr_indices[1]]
+        secondtype = get_effective_type(operand_types[expr_indices[1]])
+        if is_subtype(firsttype, secondtype):
+            if_map[second] = firsttype
             #else_map[operands[0]] = operand_types[0]
-        elif is_subtype(operand_types[expr_indices[1]], operand_types[expr_indices[0]]):
-            if_map[operands[expr_indices[0]]] = operand_types[expr_indices[1]]
+        elif is_subtype(secondtype, firsttype):
+            if_map[first] = secondtype
             #else_map[operands[1]] = operand_types[1]
         return if_map, else_map
 
