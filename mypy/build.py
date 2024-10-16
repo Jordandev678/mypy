@@ -664,7 +664,7 @@ class BuildManager:
         for module in CORE_BUILTIN_MODULES:
             if options.use_builtins_fixtures:
                 continue
-            path = self.find_module_cache.find_module(module)
+            path = self.find_module_cache.find_module(module, fast_path=True)
             if not isinstance(path, str):
                 raise CompileError(
                     [f"Failed to find builtin module {module}, perhaps typeshed is broken?"]
@@ -736,8 +736,8 @@ class BuildManager:
         shadow_file = self.shadow_equivalence_map.get(path)
         return shadow_file if shadow_file else path
 
-    def get_stat(self, path: str) -> os.stat_result:
-        return self.fscache.stat(self.maybe_swap_for_shadow_path(path))
+    def get_stat(self, path: str) -> os.stat_result | None:
+        return self.fscache.stat_or_none(self.maybe_swap_for_shadow_path(path))
 
     def getmtime(self, path: str) -> int:
         """Return a file's mtime; but 0 in bazel mode.
@@ -1394,9 +1394,9 @@ def validate_meta(
     if bazel:
         # Normalize path under bazel to make sure it isn't absolute
         path = normpath(path, manager.options)
-    try:
-        st = manager.get_stat(path)
-    except OSError:
+
+    st = manager.get_stat(path)
+    if st is None:
         return None
     if not stat.S_ISDIR(st.st_mode) and not stat.S_ISREG(st.st_mode):
         manager.log(f"Metadata abandoned for {id}: file or directory {path} does not exist")
@@ -1572,10 +1572,9 @@ def write_cache(
     plugin_data = manager.plugin.report_config_data(ReportConfigContext(id, path, is_check=False))
 
     # Obtain and set up metadata
-    try:
-        st = manager.get_stat(path)
-    except OSError as err:
-        manager.log(f"Cannot get stat for {path}: {err}")
+    st = manager.get_stat(path)
+    if st is None:
+        manager.log(f"Cannot get stat for {path}")
         # Remove apparently-invalid cache files.
         # (This is purely an optimization.)
         for filename in [data_json, meta_json]:
@@ -2726,7 +2725,9 @@ def exist_added_packages(suppressed: list[str], manager: BuildManager, options: 
 
 def find_module_simple(id: str, manager: BuildManager) -> str | None:
     """Find a filesystem path for module `id` or `None` if not found."""
-    x = find_module_with_reason(id, manager)
+    t0 = time.time()
+    x = manager.find_module_cache.find_module(id, fast_path=True)
+    manager.add_stats(find_module_time=time.time() - t0, find_module_calls=1)
     if isinstance(x, ModuleNotFoundReason):
         return None
     return x
@@ -2735,7 +2736,7 @@ def find_module_simple(id: str, manager: BuildManager) -> str | None:
 def find_module_with_reason(id: str, manager: BuildManager) -> ModuleSearchResult:
     """Find a filesystem path for module `id` or the reason it can't be found."""
     t0 = time.time()
-    x = manager.find_module_cache.find_module(id)
+    x = manager.find_module_cache.find_module(id, fast_path=False)
     manager.add_stats(find_module_time=time.time() - t0, find_module_calls=1)
     return x
 

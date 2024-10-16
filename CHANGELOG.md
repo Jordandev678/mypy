@@ -187,6 +187,8 @@ List of documentation updates:
  * Make changelog visible in mypy documentation (quinn-sasha, PR [17742](https://github.com/python/mypy/pull/17742))
  * List all incomplete features in `--enable-incomplete-feature` docs (sobolevn, PR [17633](https://github.com/python/mypy/pull/17633))
  * Remove the explicit setting of a pygments theme (Pradyun Gedam, PR [17571](https://github.com/python/mypy/pull/17571))
+ * Document ReadOnly with TypedDict (Jukka Lehtosalo, PR [17905](https://github.com/python/mypy/pull/17905))
+ * Document TypeIs (Chelsea Durazo, PR [17821](https://github.com/python/mypy/pull/17821))
 
 ### Experimental Inline TypedDict Syntax
 
@@ -250,6 +252,10 @@ This feature was contributed by Ivan Levkivskyi (PR [17457](https://github.com/p
  * Fix typechecking for async generators (Danny Yang, PR [17452](https://github.com/python/mypy/pull/17452))
  * Fix strict optional handling in attrs plugin (Ivan Levkivskyi, PR [17451](https://github.com/python/mypy/pull/17451))
  * Allow mixing ParamSpec and TypeVarTuple in Generic (Ivan Levkivskyi, PR [17450](https://github.com/python/mypy/pull/17450))
+ * Improvements to `functools.partial` of types (Shantanu, PR [17898](https://github.com/python/mypy/pull/17898))
+ * Make ReadOnly TypedDict items covariant (Jukka Lehtosalo, PR [17904](https://github.com/python/mypy/pull/17904))
+ * Fix union callees with `functools.partial` (Jukka Lehtosalo, PR [17903](https://github.com/python/mypy/pull/17903))
+ * Improve handling of generic functions with `functools.partial` (Ivan Levkivskyi, PR [17925](https://github.com/python/mypy/pull/17925))
 
 ### Typeshed Updates
 
@@ -263,6 +269,7 @@ Thanks to all mypy contributors who contributed to this release:
 - Bénédikt Tran
 - Brian Schubert
 - bzoracler
+- Chelsea Durazo
 - Danny Yang
 - Edgar Ramírez Mondragón
 - Eric Mark Martin
@@ -496,6 +503,15 @@ Mypyc now supports the new syntax for generics introduced in Python 3.12 (see ab
 
 Please see [git log](https://github.com/python/typeshed/commits/main?after=6dda799d8ad1d89e0f8aad7ac41d2d34bd838ace+0&branch=main&path=stdlib) for full list of standard library typeshed stub changes.
 
+### Mypy 1.11.1
+ * Fix `RawExpressionType.accept` crash with `--cache-fine-grained` (Anders Kaseorg, PR [17588](https://github.com/python/mypy/pull/17588))
+ * Fix PEP 604 isinstance caching (Shantanu, PR [17563](https://github.com/python/mypy/pull/17563))
+ * Fix `typing.TypeAliasType` being undefined on python < 3.12 (Nikita Sobolev, PR [17558](https://github.com/python/mypy/pull/17558))
+ * Fix `types.GenericAlias` lookup crash (Shantanu, PR [17543](https://github.com/python/mypy/pull/17543))
+
+### Mypy 1.11.2
+ * Alternative fix for a union-like literal string (Ivan Levkivskyi, PR [17639](https://github.com/python/mypy/pull/17639))
+ * Unwrap `TypedDict` item types before storing (Ivan Levkivskyi, PR [17640](https://github.com/python/mypy/pull/17640))
 
 ### Acknowledgements
 Thanks to all mypy contributors who contributed to this release:
